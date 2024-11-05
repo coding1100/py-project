@@ -1,0 +1,10 @@
+version: '3.8'
+
+services:
+  app:
+    build: .
+    environment:
+      - OPENAI_ENDPOINT=https://thirdwishgroup-ai.openai.azure.com/openai/deployments/gpt-4o/chat/completions?api-version=2024-02-15-preview
+      - API_KEY=e78c273f6f844dd2bb0f00fdba023b6a  # Set your actual API key securely here
+    volumes:
+      - .:/app  # Mount current directory to /app in the container
