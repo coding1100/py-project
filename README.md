@@ -42,3 +42,10 @@ Clone the repository to your local machine:
 ```bash
 git clone https://github.com/yourusername/problem-processor.git
 cd problem-processor
+
+## run project
+docker-compose build
+docker-compose up
+
+## run test cases
+docker-compose exec app pytest tests/

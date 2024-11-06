@@ -1,0 +1,65 @@
+username or not registration_response:
+        return jsonify({'error': 'Username and registration response are required'}), 400
+
+    # Verify the registration response
+    try:
+        credential = webauthn.verify_registration_response(username, registration_response)
+        users[username] = {
+            'credential_id': credential.credential_id,
+            'public_key': credential.public_key,
+            'sign_count': credential.sign_count
+        }
+        return jsonify({'status': 'Registration successful'}), 200
+    except Exception as e:
+        return jsonify({'error': str(e)}), 400
+
+@app.route('/login/begin', methods=['POST'])
+def login_begin():
+    username = request.json.get('username')
+    if not username or username not in users:
+        return jsonify({'error': 'Invalid username'}), 400
+
+    # Generate authentication options
+    authentication_options = webauthn.generate_authentication_options(users[username]['credential_id'])
+    return jsonify(authentication_options)
+
+@app.route('/login/complete', methods=['POST'])
+def login_complete():
+    username = request.json.get('username')
+    authentication_response = request.json.get('response')
+
+    if not username or not authentication_response or username not in users:
+        return jsonify({'error': 'Invalid request'}), 400
+
+    # Verify the authentication response
+    try:
+        webauthn.verify_authentication_response(users[username]['public_key'], authentication_response, users[username]['sign_count'])
+        
+        # Update the sign count after successful authentication
+        users[username]['sign_count'] = authentication_response['authenticator_data']['sign_count']
+        return jsonify({'status': 'Login successful'}), 200
+    except Exception as e:
+        return jsonify({'error': str(e)}), 400
+
+if __name__ == '__main__':
+    app.run(debug=True)
+```
+
+### Explanation of the Example:
+
+- **Registration Flow:**
+  - `register/begin`: Generates registration options for the client to begin the registration process.
+  - `register/complete`: Verifies the registration response from the client and stores the user's credential information (credential ID, public key, and sign count) in memory.
+
+- **Login Flow:**
+  - `login/begin`: Generates authentication options for the client to begin the login process.
+  - `login/complete`: Verifies the authentication response from the client. If successful, updates the sign count for the user's credential.
+
+This example demonstrates the use of WebAuthn for passwordless authentication, providing a highly secure and user-friendly experience. The in-memory storage used here is for demonstration purposes; in a real application, you should store user credentials securely in a database.
+
+### Additional Considerations:
+- **Secure Storage:** Ensure that all sensitive data, such as public keys and sign counts, are stored securely.
+- **Error Handling:** Implement comprehensive error handling and logging for all authentication processes.
+- **Scalability:** Consider the scalability of your authentication mechanisms, especially if you expect a large number of users.
+
+By following these advanced practices and continuously improving your authentication mechanisms, you can enhance the overall security and user experience of your platform.
